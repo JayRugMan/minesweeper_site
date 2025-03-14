@@ -66,7 +66,12 @@ class Minesweeper {
         return;
       }
 
-      if (this.gameOver || this.revealed.has(key)) return;
+      if (this.gameOver || this.revealed.has(key)) {
+        if (this.revealed.has(key) && this.board[row][col] !== 'M') {
+            this.chordCell(row, col);
+        }
+        return;
+      }
 
       this.revealed.add(key);
 
@@ -86,7 +91,49 @@ class Minesweeper {
       this.checkWin();
   }
 
-  toggleFlag(row,col) {
+  chordCell(row, col) {
+    if (this.gameOver || this.board[row][col] === 0) return;
+
+    let flagCount = 0;
+    const adjacentCells = [];
+    for (let di = -1; di <= 1; di++) {
+        for (let dj = -1; dj <= 1; dj++) {
+            const ni = row + di;
+            const nj = col + dj;
+            if (ni >= 0 && ni < this.rows && nj >= 0 && nj < this.cols) {
+                const adjKey = `${ni},${nj}`;
+              if (this.flagged.has(adjKey)) {
+                  flagCount++;
+              }
+              if (!this.revealed.has(adjKey) && !this.flagged.has(adjKey)) {
+                  adjacentCells.push([ni, nj]);
+              }
+            }
+        }
+    }
+
+    if (flagCount === this.board[row][col]) {
+        for (const [ni, nj] of adjacentCells) {
+            const adjKey = `${ni},${nj}`;
+            if (this.board[ni][nj] === 'M') {
+                this.revealed.add(adjKey);
+                this.gameOver = true;
+                this.revealAllMines();
+                this.gridElement.style.border = '5px solid red';
+                alert('Game Over! Incorrect flag placement revealed a mine.');
+                return;
+            }
+            this.revealed.add(adjKey);
+            if (this.board[ni][nj] === 0) {
+                this.floodFill(ni, nj);
+            }
+        }
+        this.render();
+        this.checkWin();
+    }
+}
+
+  toggleFlag(row, col) {
     if (this.gameOver || this.revealed.has(`${row},${col}`)) return;
 
     const key = `${row},${col}`;
@@ -129,7 +176,7 @@ class Minesweeper {
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.cols; j++) {
         if (this.board[i][j] !== 'M') {
-          this.revealed.add(`${i},${j}`)
+          this.revealed.add(`${i},${j}`);
         }
       }
     }
@@ -139,7 +186,7 @@ class Minesweeper {
   checkWin() {
       const totalCells = this.rows * this.cols;
       const nonMineCells = totalCells - this.mines;
-      const allMinesFlagged = this.flagged.size === this.mines &&
+      const allMinesFlagged = this.flagged.size === this.mines && 
         [...this.flagged].every(key => {
           const [row, col] = key.split(',').map(Number);
           return this.board[row][col] === 'M';
@@ -179,7 +226,7 @@ class Minesweeper {
               cell.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 this.toggleFlag(i, j);
-              })
+              });
               this.gridElement.appendChild(cell);
           }
       }
