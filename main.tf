@@ -11,6 +11,11 @@ data "aws_ami" "debian" {
   }
 }
 
+resource "aws_key_pair" "deployer" {
+  key_name   = "minesweeper-deployer-key"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC9GZeoVJvQLCCH4xDySbU2i5i5vEL/+vwofAWdvGlmmQykBOYkNKiEOHgLXWgCO5FO7b+lAIDvNBsyrIvL3NLclT+3dDZyxfkslvvIlJiCTUgYAMeIlVoOUO8YJi1x4axxbZNRFEu5Lh4J+R+lUxfc/CH+PxCs2lR7rooyU+N6h/qtjer2YCu6fr82c5OuGqmJaalVD2fe4gpk33wxWMNfql2p+I2uE13u+oBgpI+d3UbAsif/grrWcCCq31k2KEaBy/xQSj4B0QRkUecOptOyJI3Q4YZFgRKVORCj7W9YsXdKuH6IamLVTAs2lI5l4PjUYM6KGw4bK3pklXX5duYi0nL/wWmBX1HjQhFXb/2WG2Z62k9BWwthf4Dk5bkmKgIgfbguGv5ml4+58nb3d0a4vKEIIw4J8Tzgm9JtM/boHcyKJk/eF0g6y46Xlt7N2GYt3Ruw5P3+m1PXISklfX1FgmFPCkYQ/h73v+Dkuc504lEiqi5bZMNp5vf7morx2FHN+HD9XQMWcZneyEUEcGj95sIqcpPxAvbOULiiiPRsnw1k3OGu3M3U4dS3u7zOkfwftLztfzkF19APoDTfllJ4gds5FfOG/WNyGnI1BlETK7HPy/HVUxBSgelSmcxcNPZf1MoogDSrOJmpkxK/SoTFdRJRbEldREIMJo7L5WJiuQ== jason.hardman@churchofjesuschrist.org"
+}
+
 resource "aws_security_group" "web_sg" {
   name_prefix = "web-sg"
 
@@ -35,12 +40,11 @@ resource "aws_security_group" "web_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow SSH on port 22 temporarily for provisioning
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Consider restricting this to your IP for security
+    cidr_blocks = ["0.0.0.0/0"] # Restrict to your IP for security if desired
   }
 
   egress {
@@ -55,22 +59,21 @@ resource "aws_instance" "web_server" {
   ami                    = data.aws_ami.debian.id
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.web_sg.id]
+  key_name               = aws_key_pair.deployer.key_name
 
   tags = {
     Name = "web-server"
   }
 
-  # Connection block for provisioners using SSH on port 22
   connection {
     type        = "ssh"
-    user        = "admin" # Default Debian user
+    user        = "admin"
     host        = self.public_ip
-    port        = 22 # Provisioners use port 22 before user_data changes it
+    port        = 22
   }
 
-  # Provisioners to upload files
   provisioner "file" {
-    source      = "index.html"
+    source      = "index.html"  # Back to uploading the file
     destination = "/home/admin/index.html"
   }
 
@@ -79,7 +82,6 @@ resource "aws_instance" "web_server" {
     destination = "/home/admin/minesweeper.js"
   }
 
-  # User data to configure the instance after provisioning
   user_data = <<-EOF
               #!/bin/bash
               apt-get update
@@ -97,27 +99,29 @@ resource "aws_instance" "web_server" {
               mkdir -p /home/jason/.ssh
               chown jason:jason /home/jason/.ssh
               chmod 700 /home/jason/.ssh
-              echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDGWw2BaLd6HAKnMRQORxYiiKyhv8AH3YyPqKt19iDdUipeWrb25ZGBNnYlfygScOWOx+hKkClxd7xYlbmXX5UXimECuVNhcyMDLSf2H3UBaCbpKljvKA6DTPLRqjNIBj6J/4t2hlnam398hcziDegUQ35bjSSYO6CHDtY3LPxBFyj4cSc1sy7eZORfOScL2X2cUVyMa7z25eJF2kj/51w94N9ZNch1SYIPsHQU8rRqbjQlXhyGTfTHwigBCQCDGzvefbXNMfFSWI4nn1fG4cCPXHqDODXLkGBIsmVdgnVJTL4I6pm61dEN+ch+1pCehINH6buTeWZHOKE1OBDWSPwx5C5z8uWQlYy8ZdRh4XPmFRbNXc+2Br6IQjSA/SqfUy26DVjjgGONuqAO/XsEkmrqWD3SI1NlUjtjLPsBs5gkDdZkoBIA3e5xPBFiqx7dnTx757SaTiT/k2bxkfe0sZFSQV37ix//wBIny2DOQzIdbI7auoLb/VcSjpGhfzBU2uZjCSf94q03BLBCjdxLUqL+g/bFLrMb8xeA6NW9VyfMqF8GicEcx9R+JZSPmRtopDpe7OuPcYstmPCUn17sBoy/S15+6NSZC/Rppd8QoS+fli0jhNIyIezAFfvcu1t3QImRzdSO2+IuLIqlZMLemCYjHuN59tbw5iIV68wzsxuEBQ== jasonhardman@workmint-vm' > /home/jason/.ssh/authorized_keys
+              echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC9GZeoVJvQLCCH4xDySbU2i5i5vEL/+vwofAWdvGlmmQykBOYkNKiEOHgLXWgCO5FO7b+lAIDvNBsyrIvL3NLclT+3dDZyxfkslvvIlJiCTUgYAMeIlVoOUO8YJi1x4axxbZNRFEu5Lh4J+R+lUxfc/CH+PxCs2lR7rooyU+N6h/qtjer2YCu6fr82c5OuGqmJaalVD2fe4gpk33wxWMNfql2p+I2uE13u+oBgpI+d3UbAsif/grrWcCCq31k2KEaBy/xQSj4B0QRkUecOptOyJI3Q4YZFgRKVORCj7W9YsXdKuH6IamLVTAs2lI5l4PjUYM6KGw4bK3pklXX5duYi0nL/wWmBX1HjQhFXb/2WG2Z62k9BWwthf4Dk5bkmKgIgfbguGv5ml4+58nb3d0a4vKEIIw4J8Tzgm9JtM/boHcyKJk/eF0g6y46Xlt7N2GYt3Ruw5P3+m1PXISklfX1FgmFPCkYQ/h73v+Dkuc504lEiqi5bZMNp5vf7morx2FHN+HD9XQMWcZneyEUEcGj95sIqcpPxAvbOULiiiPRsnw1k3OGu3M3U4dS3u7zOkfwftLztfzkF19APoDTfllJ4gds5FfOG/WNyGnI1BlETK7HPy/HVUxBSgelSmcxcNPZf1MoogDSrOJmpkxK/SoTFdRJRbEldREIMJo7L5WJiuQ== jason.hardman@churchofjesuschrist.org' > /home/jason/.ssh/authorized_keys
               chown jason:jason /home/jason/.ssh/authorized_keys
               chmod 600 /home/jason/.ssh/authorized_keys
 
               # Configure SSH to use port 52020
-              # sed -i 's/#Port 22/Port 52020/' /etc/ssh/sshd_config
-              # sed -i '/Port 22/d' /etc/ssh/sshd_config
-              sed -i 's/#Port 22/Port 2020/' /etc/ssh/sshd_config
+              sed -i 's/#Port 22/Port 52020/' /etc/ssh/sshd_config
+              sed -i '/Port 22/d' /etc/ssh/sshd_config
 
-              # Remove default Nginx configuration
+              # Remove default Nginx config
               rm -f /etc/nginx/sites-enabled/default
 
-              # Create web root directory and copy files
+              # Create web root directory and set permissions
               mkdir -p /var/www/minesweeper
-              mv /home/admin/index.html /var/www/minesweeper/
-              mv /home/admin/minesweeper.js /var/www/minesweeper/
+              mv /home/admin/index.html /var/www/minesweeper/ 2>/dev/null || echo "index.html not found"
+              mv /home/admin/minesweeper.js /var/www/minesweeper/ 2>/dev/null || echo "minesweeper.js not found"
+              chown -R www-data:www-data /var/www/minesweeper
+              chmod -R 644 /var/www/minesweeper/*
 
-              # Write Nginx config without backslashes
+              # Write Nginx config with charset
               echo "server {" > /etc/nginx/sites-available/minesweeper
               echo "    listen 80;" >> /etc/nginx/sites-available/minesweeper
               echo "    server_name _;" >> /etc/nginx/sites-available/minesweeper
+              echo "    charset utf-8;" >> /etc/nginx/sites-available/minesweeper
               echo "    root /var/www/minesweeper;" >> /etc/nginx/sites-available/minesweeper
               echo "    index index.html;" >> /etc/nginx/sites-available/minesweeper
               echo "    location / {" >> /etc/nginx/sites-available/minesweeper
@@ -125,12 +129,12 @@ resource "aws_instance" "web_server" {
               echo "    }" >> /etc/nginx/sites-available/minesweeper
               echo "}" >> /etc/nginx/sites-available/minesweeper
 
-              # Enable Nginx configuration
+              # Ensure symlink
               ln -sf /etc/nginx/sites-available/minesweeper /etc/nginx/sites-enabled/minesweeper
 
-              # Restart services
-              systemctl restart nginx
-              systemctl restart sshd
+              # Restart Nginx
+              systemctl stop nginx
+              systemctl start nginx
               EOF
 }
 
