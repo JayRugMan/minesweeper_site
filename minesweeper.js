@@ -9,6 +9,7 @@ class Minesweeper {
       this.gameOver = false;
       this.gridElement = document.getElementById('grid');
       this.restartButton = document.getElementById('restart-btn');
+      this.flagsnMinesElement = document.getElementById('flags&Mines');
       this.init();
   }
 
@@ -19,6 +20,7 @@ class Minesweeper {
       this.placeMines();
       this.calculateNumbers();
       this.render();
+      this.updateFlaggedRatio();
   }
 
   createBoard() {
@@ -131,7 +133,11 @@ class Minesweeper {
         this.render();
         this.checkWin();
     }
-}
+  }
+
+  updateFlaggedRatio() {
+    this.flagsnMinesElement.textContent = `🚩${this.flagged.size} 💣${this.mines}`;
+  }
 
   toggleFlag(row, col) {
     if (this.gameOver || this.revealed.has(`${row},${col}`)) return;
@@ -144,6 +150,7 @@ class Minesweeper {
     }
     this.render();
     this.checkWin();
+    this.updateFlaggedRatio();
   }
 
   floodFill(row, col) {
@@ -241,8 +248,9 @@ class Minesweeper {
       this.placeMines();
       this.calculateNumbers();
       this.render();
+      this.updateFlaggedRatio();
   }
 }
 
-// Start the game with 10x10 grid and 10 mines
-const game = new Minesweeper(10, 10, 10);
+// Start the game with 16x16 grid and 40 mines
+const game = new Minesweeper(16, 16, 40);
