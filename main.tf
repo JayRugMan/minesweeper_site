@@ -103,15 +103,17 @@ resource "aws_instance" "web_server" {
               chown jason:jason /home/jason/.ssh/authorized_keys
               chmod 600 /home/jason/.ssh/authorized_keys
 
-              # Configure SSH to use port 52020
+              # Configure SSH to use port 52020 and restart sshd
               sed -i 's/#Port 22/Port 52020/' /etc/ssh/sshd_config
               sed -i '/Port 22/d' /etc/ssh/sshd_config
+              systemctl restart sshd
 
               # Remove default Nginx config
               rm -f /etc/nginx/sites-enabled/default
 
               # Create web root directory and set permissions
               mkdir -p /var/www/minesweeper
+              sleep 2
               mv /home/admin/index.html /var/www/minesweeper/ 2>/dev/null || echo "index.html not found"
               mv /home/admin/minesweeper.js /var/www/minesweeper/ 2>/dev/null || echo "minesweeper.js not found"
               chown -R www-data:www-data /var/www/minesweeper
