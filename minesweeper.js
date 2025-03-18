@@ -136,7 +136,7 @@ class Minesweeper {
   }
 
   updateFlaggedRatio() {
-    this.flagsnMinesElement.textContent = `🚩${this.flagged.size} 💣${this.mines}`;
+    this.flagsnMinesElement.textContent = `🚩${this.flagged.size} 🔹 💣${this.mines}`;
   }
 
   toggleFlag(row, col) {
