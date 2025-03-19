@@ -43,11 +43,12 @@ class Minesweeper {
   calculateNumbers() {
       for (let i = 0; i < this.rows; i++) {
           for (let j = 0; j < this.cols; j++) {
-              if (this.board[i][j] === 'M') continue;
+              if (this.board[i][j] === 'M') continue; // only check non-mine squares
               
               let count = 0;
               for (let di = -1; di <= 1; di++) {
                   for (let dj = -1; dj <= 1; dj++) {
+                      if (di === 0 && dj === 0) continue; // Basically, don't check if the non-mine square has a mine
                       const ni = i + di;
                       const nj = j + dj;
                       if (ni >= 0 && ni < this.rows && 
@@ -78,11 +79,11 @@ class Minesweeper {
       this.revealed.add(key);
 
       if (this.board[row][col] === 'M') {
-          this.gameOver = true;
-          this.revealAllMines();
-          this.gridElement.style.border = '5px solid red';
-          alert('Game Over! You hit a mine.');
-          return;
+        this.gameOver = true;
+        this.revealAllMines();
+        this.gridElement.style.border = '5px solid red';
+        alert('Game Over! You hit a mine.');
+        return;
       }
 
       if (this.board[row][col] === 0) {
@@ -100,6 +101,7 @@ class Minesweeper {
     const adjacentCells = [];
     for (let di = -1; di <= 1; di++) {
         for (let dj = -1; dj <= 1; dj++) {
+            if (di === 0 && dj === 0) continue;
             const ni = row + di;
             const nj = col + dj;
             if (ni >= 0 && ni < this.rows && nj >= 0 && nj < this.cols) {
@@ -156,6 +158,7 @@ class Minesweeper {
   floodFill(row, col) {
       for (let di = -1; di <= 1; di++) {
           for (let dj = -1; dj <= 1; dj++) {
+              if (di === 0 && dj === 0) continue;
               const ni = row + di;
               const nj = col + dj;
               if (ni >= 0 && ni < this.rows && 
