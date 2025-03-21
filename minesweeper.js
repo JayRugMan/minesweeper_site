@@ -82,7 +82,6 @@ class Minesweeper {
         this.gameOver = true;
         this.revealAllMines();
         this.gridElement.style.border = '5px solid red';
-        alert('Game Over! You hit a mine.');
         return;
       }
 
@@ -124,7 +123,6 @@ class Minesweeper {
                 this.gameOver = true;
                 this.revealAllMines();
                 this.gridElement.style.border = '5px solid red';
-                alert('Game Over! Incorrect flag placement revealed a mine.');
                 return;
             }
             this.revealed.add(adjKey);
@@ -208,7 +206,6 @@ class Minesweeper {
             this.revealAllNonMines();
           }
           this.gridElement.style.border = '5px solid green';
-          alert('Congratulations! You won!');
       }
   }
 
