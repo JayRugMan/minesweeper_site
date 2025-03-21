@@ -78,6 +78,11 @@ resource "aws_instance" "web_server" {
   }
 
   provisioner "file" {
+    source      = "style.css"
+    destination = "/home/admin/style.css"
+  }
+
+  provisioner "file" {
     source      = "minesweeper.js"
     destination = "/home/admin/minesweeper.js"
   }
@@ -115,6 +120,7 @@ resource "aws_instance" "web_server" {
               mkdir -p /var/www/minesweeper
               sleep 2
               mv /home/admin/index.html /var/www/minesweeper/ 2>/dev/null || echo "index.html not found"
+              mv /home/admin/style.css /var/www/minesweeper/ 2>/dev/null || echo "style.css not found"
               mv /home/admin/minesweeper.js /var/www/minesweeper/ 2>/dev/null || echo "minesweeper.js not found"
               chown -R www-data:www-data /var/www/minesweeper
               chmod -R 644 /var/www/minesweeper/*
