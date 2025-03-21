@@ -1,0 +1,43 @@
+/* Style Sheet for mine */
+
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.grid {
+    display: grid;
+    gap: 2px;
+    background-color: #ccc;
+    padding: 10px;
+    width: fit-content;
+}
+.cell {
+    width: 30px;
+    height: 30px;
+    background-color: #bbb;
+    border: 2px outset #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+}
+.cell.revealed {
+    border: 1px solid #999;
+    background-color: #ddd;
+}
+.cell.mine {
+    background-color: #ff4444;
+}
+.game-container {
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+#restart-btn {
+    margin: 10px;
+    padding: 5px 15px;
+    cursor: pointer;
+}
